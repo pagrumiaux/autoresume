@@ -1,0 +1,35 @@
+# Python / tooling
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Personal data (lives in the private resume-data repo)
+resume-data/
+data/
+archive/
+applications/
+lessons/
+bank/*.yaml
+!tests/fixtures/**
+!examples/**
+
+# Logs and generated output
+*.jsonl
+*.log
+*.pdf
+!tests/fixtures/**/*.pdf
+!examples/**/*.pdf
+.claude/settings.local.json
