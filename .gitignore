@@ -16,8 +16,8 @@ build/
 .env.*
 !.env.example
 
-# Personal data (lives in the private resume-data repo)
-resume-data/
+# Personal data (lives in the private autoresume-data repo)
+autoresume-data/
 data/
 archive/
 applications/
@@ -28,6 +28,8 @@ bank/*.yaml
 
 # Logs and generated output
 *.jsonl
+!tests/fixtures/**/*.jsonl
+!examples/**/*.jsonl
 *.log
 *.pdf
 !tests/fixtures/**/*.pdf

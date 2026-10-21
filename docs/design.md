@@ -1,6 +1,7 @@
-# Resume & Cover Letter Agent: Project Plan
+# autoresume: design
 
-As of 2026-10-06.
+Goals, principles, architecture and roadmap. The tasks for each phase are in `docs/plan.md`;
+lasting decisions are in `docs/decisions/`.
 
 ## Goals
 
@@ -116,7 +117,9 @@ unsupported claim.
 
 ## Phases
 
-Eight phases, each ending with something usable.
+Eight phases, each ending with something usable. A phase's tasks are added to `docs/plan.md`
+with `/jam` just before it starts, from this table, the decision records, the code as it is then,
+and the previous phase's retro.
 
 | Phase | Deliverable | Learning goal |
 | --- | --- | --- |
@@ -151,8 +154,8 @@ Plain Python with no agent framework, so every layer is mine to write and explai
 The code repo is public on GitHub; personal data lives in a separate private repo:
 
 ```text
-resume-agent/                 # public code
-  src/resume_agent/
+autoresume/                   # public code
+  src/autoresume/
     bank/        # schema, loading, queries
     render/      # Typst templates, render, page check
     llm/         # provider adapters, routing
@@ -165,7 +168,7 @@ resume-agent/                 # public code
   examples/      # fake bank and archetype for demos
   docs/
 
-resume-data/                  # private
+autoresume-data/              # private
   bank.yaml
   archetypes/
   letter_examples/
@@ -191,12 +194,3 @@ The biggest risk is effort, not technology: phase 0 can stall if the bank feels 
 - **Lesson creep:** each lesson needs my approval, and the file gets a periodic review.
 - **Privacy:** check each provider's data-retention terms before routing personal data to it.
 - **Small sample size:** callbacks are too rare to measure quality; rely on proxy metrics and judgment.
-
-## Decided on 2026-10-06
-
-- New resume design from scratch, in Typst.
-- Code public on GitHub; personal data in a separate private repo.
-- Eval set from past and hand-picked job descriptions, pasted in, no fetching.
-- Archetypes grow on demand, with my confirmation on every pick; decisions are logged and retrieved.
-- Seed archetypes are drafted by the agent (or Claude) from the filled bank, then refined by me.
-- Implementation in Claude Code with the ownership split in `CLAUDE.md`.
