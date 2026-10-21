@@ -33,3 +33,7 @@ bank/*.yaml
 !tests/fixtures/**/*.pdf
 !examples/**/*.pdf
 .claude/settings.local.json
+
+# dotclaude (local only)
+.claude/worktrees/
+.claude/session-notes.md
