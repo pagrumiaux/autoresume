@@ -1,6 +1,8 @@
-# 0005: Archetypes with human confirmation and retrieval-based learning
-
-Date: 2026-10-06 · Status: accepted
+# Archetypes with human confirmation and retrieval-based learning
+- Date: 2026-10-06
+- Area: archetypes, agents, feedback
+- Status: accepted
+- Source: initial plan
 
 ## Context
 Applications fall into role families, but new families appear. The agent must not silently
@@ -13,7 +15,7 @@ force a job into the wrong archetype or multiply near-duplicate archetypes.
   every pick. Decisions are logged and similar past decisions are retrieved as prompt examples.
 - A new archetype is proposed only after showing the nearest existing one; variants can inherit.
 
-## Alternatives considered
+## Rejected options
 - Fine-tuning a classifier: far too few examples.
 - Fully automatic classification: errors would go unnoticed.
 

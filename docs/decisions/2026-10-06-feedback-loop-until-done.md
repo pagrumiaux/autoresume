@@ -1,6 +1,8 @@
-# 0006: Feedback loop until I say done, with approved lessons
-
-Date: 2026-10-06 · Status: accepted
+# Feedback loop until I say done, with approved lessons
+- Date: 2026-10-06
+- Area: feedback, agents
+- Status: accepted
+- Source: initial plan
 
 ## Context
 Cover letters are generative and error-prone; resumes also need taste that only I can judge.

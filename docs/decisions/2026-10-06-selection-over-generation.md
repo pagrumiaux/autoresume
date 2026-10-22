@@ -1,6 +1,8 @@
-# 0001: Selection over generation, with an experience bank
-
-Date: 2026-10-06 · Status: accepted
+# Selection over generation, with an experience bank
+- Date: 2026-10-06
+- Area: bank, agents
+- Status: accepted
+- Source: initial plan
 
 ## Context
 Tailored resumes must not overclaim, and must not look overfitted to the job description,
@@ -11,7 +13,7 @@ All resume and letter content comes from a verified experience bank (YAML, FR + 
 Agents select, order and lightly rephrase; a new claim enters the bank only after my approval.
 Every output sentence must trace back to a bank entry.
 
-## Alternatives considered
+## Rejected options
 - Free generation from a base resume: fast, but overclaims and drifts in tone.
 - Fully manual variants per role: safe, but no learning value and slow.
 
