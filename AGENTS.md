@@ -54,15 +54,10 @@ The user implements some areas themselves, to learn. In those areas, never write
 - `docs/design.md`: goals, principles, architecture and roadmap. Read before changing how agents, tools or data fit together.
 
 ## Workflow rules
-- Default branch: `main`. Never commit or push to it, and never merge PRs: every change goes through a PR the user merges.
-- The plan is `docs/plan.md` (format: `docs/PLAN_FORMAT.md`). Only `/jam` changes it, through a `plan:` PR.
-- One task = one branch `task/<ID>` = one PR titled `<ID>: <title>`. IDs: plan tasks `P<n>.S<m>`, cleanup `P<n>.Z`, docs `P<n>.D`; outside the plan, bugs `B-<slug>`, small changes `Q-<slug>`, rules `R-<slug>`.
-- Commit messages: `feat|fix|test|refactor|docs(<ID>): <what>`.
-- For GitHub, use `gh pr …` and `gh issue …`.
-- Never force-push and never rewrite pushed history.
-- README and CHANGELOG are updated by each phase's docs task, not by individual tasks.
-- AGENTS.md changes only through `R-<slug>` PRs, one rule each.
-- A change that makes a lasting choice beyond its task adds a decision record in `docs/decisions/` (format in its README).
+Shared by every project: `~/repertoire/rules/workflow.md` (loaded in every session).
+
+## Standards
+Language standards: `~/repertoire/standards/python.md`. Read the section you need.
 
 ## Rules from review
 <!-- One line per rule, added by R- PRs: "- <rule> (from #<PR>)" -->
