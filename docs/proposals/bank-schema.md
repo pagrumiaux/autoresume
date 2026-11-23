@@ -25,7 +25,7 @@ string is a small `{fr, en}` mapping.
 ```yaml
 # bank.yaml
 skills:
-  - {id: pytorch, label: PyTorch, group: ml}
+  - {id: pytorch, label: {fr: PyTorch, en: PyTorch}, group: ml}
   - {id: dsp, label: {fr: Traitement du signal, en: Signal processing}, group: audio}
 experiences:
   - id: acme-2022
@@ -54,6 +54,10 @@ class Experience(BaseModel): id: str; org: str; role: Text; start: date; end: da
 class Bank(BaseModel): skills: list[Skill]; experiences: list[Experience]; projects: list[Project]
 ```
 
+Dates: PyYAML loads `2022-03` as a string (only `2022-03-01` becomes a date). So `start` and `end`
+need either a `YearMonth` type (a string with pattern `^\d{4}-\d{2}$`, or a custom type that parses
+it) or full dates in the YAML. This applies to options A, B and C; see open question 4.
+
 - Validation strength: strong at the type level (a missing `fr` fails on load). Cross-references
   (bullet tags exist in `skills`, ids are unique across the whole bank) need a model validator.
 - Hand editing: one bullet's two languages sit side by side, so translations are easy to keep
@@ -69,6 +73,9 @@ default order. Text is still inline `{fr, en}`.
 
 ```yaml
 # bank.yaml
+skills:
+  pytorch: {label: {fr: PyTorch, en: PyTorch}, group: ml}
+  dsp: {label: {fr: Traitement du signal, en: Signal processing}, group: audio}
 bullets:
   acme-2022-denoiser:
     tags: [pytorch, dsp]
@@ -88,7 +95,10 @@ projects:
 
 ```python
 # sketch only
+class Skill(BaseModel): label: Text; group: str
+class Bullet(BaseModel): tags: list[SkillId]; text: Text   # id is the dict key
 class Bank(BaseModel):
+    skills: dict[SkillId, Skill]
     bullets: dict[BulletId, Bullet]       # BulletId = Annotated[str, StringConstraints(pattern=...)]
     experiences: list[Experience]         # Experience.bullets: list[BulletId]
     @model_validator(mode="after")        # every referenced id and tag must exist
@@ -110,14 +120,54 @@ class Bank(BaseModel):
 `bank.en.yaml` and `bank.fr.yaml` have the same structure and the same ids, with plain strings
 instead of `{fr, en}` mappings. A loader merges them, or loads the one needed.
 
+Ownership rule: the EN file owns all structure (ids, tags, dates, ordering); the FR file holds
+only ids plus translated strings, and must not repeat tags or dates.
+
 ```yaml
-# bank.en.yaml                          # bank.fr.yaml
-experiences:                            experiences:
-  - id: acme-2022                         - id: acme-2022
-    role: Research engineer                 role: Ingénieur recherche
-    bullets:                                bullets:
-      - id: acme-2022-denoiser                - id: acme-2022-denoiser
-        text: Designed a real-time ...          text: Conception d'un ...
+# bank.en.yaml (owner)
+skills:
+  - {id: pytorch, label: PyTorch, group: ml}
+  - {id: dsp, label: Signal processing, group: audio}
+experiences:
+  - id: acme-2022
+    org: Acme Labs
+    role: Research engineer
+    start: 2022-03
+    end: 2024-08
+    bullets:
+      - id: acme-2022-denoiser
+        tags: [pytorch, dsp]
+        text: Designed a real-time denoiser, halving latency.
+projects:
+  - id: toy-synth
+    name: Toy Synth
+    bullets:
+      - {id: toy-synth-vst, tags: [dsp], text: Built a VST synth plugin.}
+```
+
+```yaml
+# bank.fr.yaml (translations only, same ids)
+skills:
+  - {id: dsp, label: Traitement du signal}     # omitted label falls back to EN
+experiences:
+  - id: acme-2022
+    role: Ingénieur recherche
+    bullets:
+      - {id: acme-2022-denoiser, text: Conception d'un débruiteur temps réel, latence divisée par deux.}
+projects:
+  - id: toy-synth
+    bullets:
+      - {id: toy-synth-vst, text: Création d'un plugin de synthé VST.}
+```
+
+```python
+# sketch only: two file models, merged into the same in-memory shape as option A
+class BankEn(Bank): ...                      # full structure, plain-string text
+class BankFr(BaseModel): ...                 # same ids, translated strings only (no tags, no dates)
+def merge(en: BankEn, fr: BankFr) -> MergedBank:
+    # walk by id; raise on an id in FR but not EN, and on an EN bullet with no FR text
+    # (the parity check); build Text(fr=..., en=...) for each string
+    ...
 ```
 
 - Validation strength: weakest by default. Language parity is a cross-file check (same ids, same
@@ -142,7 +192,8 @@ experiences:                            experiences:
 
 Suggestion: option B. Archetypes and traceability both work on bullet ids, so making ids the
 primary keys removes a layer. A and B differ only in where bullets live, so you can start from A and
-move to B later with a mechanical migration. C is worth choosing only if you expect to write EN and
+move to B later; the migration is mostly mechanical, but bullets copied in A to reuse them must be
+deduplicated by hand. C is worth choosing only if you expect to write EN and
 FR at different times and want to keep them apart.
 
 ## Archetypes (shared by all options)
@@ -218,5 +269,6 @@ Fake equivalents for tests and demos go in `tests/fixtures/` and `examples/`, in
 1. A, B or C? (I suggest B.)
 2. Is a skill a plain id with a label, or does it need levels and categories now?
 3. Are archetype `signals` free text, or tags drawn from the skills list?
-4. Should `end` be omitted for ongoing roles (above), or an explicit `present` value?
+4. Dates: `YYYY-MM` strings with a `YearMonth` type (PyYAML does not parse them as dates), or full
+   `YYYY-MM-DD` dates? And should `end` be omitted for ongoing roles (above), or be `present`?
 5. May a bullet belong to both a job and a project (only B allows it without copying)?
