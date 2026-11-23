@@ -52,6 +52,7 @@ class Text(BaseModel): fr: str; en: str
 class Bullet(BaseModel): id: str; tags: list[str]; text: Text
 class Experience(BaseModel): id: str; org: str; role: Text; start: date; end: date | None; bullets: list[Bullet]
 class Bank(BaseModel): skills: list[Skill]; experiences: list[Experience]; projects: list[Project]
+# Skill, Project: same pattern
 ```
 
 Dates: PyYAML loads `2022-03` as a string (only `2022-03-01` becomes a date). So `start` and `end`
@@ -148,12 +149,12 @@ projects:
 ```yaml
 # bank.fr.yaml (translations only, same ids)
 skills:
-  - {id: dsp, label: Traitement du signal}     # omitted label falls back to EN
+  - {id: dsp, label: Traitement du signal}     # skill labels only: omitted falls back to EN
 experiences:
   - id: acme-2022
     role: Ingénieur recherche
     bullets:
-      - {id: acme-2022-denoiser, text: Conception d'un débruiteur temps réel, latence divisée par deux.}
+      - {id: acme-2022-denoiser, text: "Conception d'un débruiteur temps réel, latence divisée par deux."}
 projects:
   - id: toy-synth
     bullets:
@@ -166,20 +167,22 @@ class BankEn(Bank): ...                      # full structure, plain-string text
 class BankFr(BaseModel): ...                 # same ids, translated strings only (no tags, no dates)
 def merge(en: BankEn, fr: BankFr) -> MergedBank:
     # walk by id; raise on an id in FR but not EN, and on an EN bullet with no FR text
-    # (the parity check); build Text(fr=..., en=...) for each string
+    # (the parity check; bullets, roles and projects have no fallback, only skill labels do); build Text(fr=..., en=...) for each string
     ...
 ```
 
-- Validation strength: weakest by default. Language parity is a cross-file check (same ids, same
-  order, same dates), which a loader test must enforce. Dates and tags are duplicated, so they can
-  drift apart unless only one file owns them.
+- Validation strength: weakest by default. Language parity is an id and order check across the two
+  files, which the merge and a loader test must enforce. Dates and tags live only in the EN file,
+  so they cannot drift apart, but a typo in an FR id is only caught by that check.
 - Hand editing: each file reads like a normal resume in one language, and you can fill EN first
   and translate later. Keeping two files in sync is a chore, which is the main risk for effort in
   Phase 0.
 - Agent queries: querying one language is trivial and cheap in tokens (an agent never sees the
   other language). Cross-language lookup, such as rephrasing from the FR source, needs the merge.
-- Archetype inheritance: unaffected, but archetype headlines then also need a per-language split,
-  which doubles that file set.
+- Archetype inheritance: unaffected, but headlines need a choice. Either split archetypes like the
+  bank (`archetypes/*.en.yaml` owns structure, `*.fr.yaml` holds the FR headline as a plain string),
+  which doubles that file set, or keep archetypes single-file with an inline `headline: {fr, en}`
+  as in the shared sketch below (my pick under C, since archetypes are small).
 
 ## Comparison
 
