@@ -6,11 +6,29 @@ skills:
   - id: sql
     label: {fr: SQL, en: SQL}
     category: languages
+  - id: r
+    label: {fr: R, en: R}
+    category: languages
+  - id: scala
+    label: {fr: Scala, en: Scala}
+    category: languages
+  - id: bash
+    label: {fr: Shell Bash, en: Bash scripting}
+    category: languages
   - id: data-pipelines
     label: {fr: Pipelines de données, en: Data pipelines}
     category: data
+  - id: data-modeling
+    label: {fr: Modélisation de données, en: Data modeling}
+    category: data
   - id: forecasting
     label: {fr: Prévision de séries temporelles, en: Time-series forecasting}
+    category: data
+  - id: statistics
+    label: {fr: Statistiques, en: Statistics}
+    category: data
+  - id: visualization
+    label: {fr: Visualisation de données, en: Data visualization}
     category: data
   - id: teamwork
     label: {fr: Travail en équipe, en: Teamwork}
@@ -18,11 +36,17 @@ skills:
   - id: mentoring
     label: {fr: Encadrement, en: Mentoring}
     category: soft-skills
+  - id: communication
+    label: {fr: Communication, en: Communication}
+    category: soft-skills
+  - id: project-management
+    label: {fr: Gestion de projet, en: Project management}
+    category: soft-skills
 
 experiences:
   - id: nordwind-analytics
     org: Nordwind Analytics
-    role: {fr: Ingénieure données, en: Data engineer}
+    role: {fr: Ingénieur données, en: Data engineer}
     start: 2021-09-01
     end: 2024-06-01
     bullets:
@@ -36,6 +60,11 @@ experiences:
         text:
           fr: Réécrit 40 requêtes SQL lentes, ce qui a divisé par trois la charge de la base de reporting.
           en: Rewrote 40 slow SQL queries, cutting the load on the reporting database by a factor of three.
+      - id: nordwind-model
+        tags: [data-modeling, sql]
+        text:
+          fr: Remodelé l'entrepôt de données en schéma en étoile, ce qui a supprimé 15 tables redondantes.
+          en: Remodeled the data warehouse as a star schema, which removed 15 redundant tables.
       - id: nordwind-mentor
         tags: [mentoring, teamwork]
         text:
@@ -43,7 +72,7 @@ experiences:
           en: Mentored two interns for six months and led the team's weekly code reviews.
   - id: brightfield-labs
     org: Brightfield Labs
-    role: {fr: Analyste quantitative, en: Quantitative analyst}
+    role: {fr: Analyste quantitatif, en: Quantitative analyst}
     start: 2018-10-01
     end: 2021-08-01
     bullets:
@@ -52,11 +81,42 @@ experiences:
         text:
           fr: Développé un modèle de prévision de la demande dont l'erreur moyenne était inférieure de 12 % à la méthode précédente.
           en: Built a demand forecasting model whose average error was 12% lower than the previous method.
+      - id: brightfield-stats
+        tags: [statistics, r]
+        text:
+          fr: Conduit des tests A/B en R sur huit campagnes et identifié deux leviers qui ont augmenté la conversion de 5 %.
+          en: Ran A/B tests in R on eight campaigns and identified two levers that raised conversion by 5%.
       - id: brightfield-team
-        tags: [teamwork]
+        tags: [teamwork, communication]
         text:
           fr: Collaboré avec quatre équipes produit pour définir les indicateurs de suivi du modèle.
           en: Worked with four product teams to define the monitoring metrics for the model.
+      - id: brightfield-dashboard
+        tags: [visualization, communication]
+        text:
+          fr: Conçu un tableau de bord hebdomadaire présenté à la direction, qui a remplacé cinq rapports manuels.
+          en: Designed a weekly dashboard presented to management that replaced five manual reports.
+  - id: calderon-logistics
+    org: Calderon Logistics
+    role: {fr: Développeur de données junior, en: Junior data developer}
+    start: 2016-09-01
+    end: 2018-09-01
+    bullets:
+      - id: calderon-scala
+        tags: [scala, data-pipelines]
+        text:
+          fr: Porté en Scala trois traitements par lots, ce qui a réduit leur durée d'exécution de moitié.
+          en: Ported three batch jobs to Scala, which halved their run time.
+      - id: calderon-bash
+        tags: [bash, python]
+        text:
+          fr: Automatisé les sauvegardes et les contrôles de qualité avec des scripts Bash et Python, évitant 10 heures de travail par mois.
+          en: Automated backups and quality checks with Bash and Python scripts, saving 10 hours of work per month.
+      - id: calderon-planning
+        tags: [project-management, teamwork]
+        text:
+          fr: Coordonné la migration d'un entrepôt de données avec six collègues, livrée avec une semaine d'avance.
+          en: Coordinated a data warehouse migration with six colleagues, delivered one week ahead of schedule.
 
 projects:
   - id: weather-notebook
@@ -68,7 +128,30 @@ projects:
           fr: Créé un carnet personnel qui charge des relevés météo fictifs dans une base SQL et trace leurs tendances.
           en: Created a personal notebook that loads made-up weather readings into a SQL database and plots their trends.
       - id: weather-forecast
-        tags: [forecasting]
+        tags: [forecasting, statistics]
         text:
           fr: Comparé trois méthodes de prévision sur ces relevés et documenté les résultats.
           en: Compared three forecasting methods on those readings and documented the results.
+      - id: weather-plots
+        tags: [visualization, python]
+        text:
+          fr: Produit douze graphiques mensuels en Python pour illustrer les écarts de température.
+          en: Produced twelve monthly charts in Python to illustrate temperature deviations.
+  - id: trail-planner
+    name: Trail Planner
+    bullets:
+      - id: trail-model
+        tags: [data-modeling, sql]
+        text:
+          fr: Modélisé une base de 200 sentiers fictifs avec leurs dénivelés et leurs difficultés.
+          en: Modeled a database of 200 made-up trails with their elevation gains and difficulty levels.
+      - id: trail-stats
+        tags: [statistics, r]
+        text:
+          fr: Analysé en R la relation entre dénivelé et durée de marche, avec un intervalle de confiance à 95 %.
+          en: Analyzed in R the relationship between elevation gain and walking time, with a 95% confidence interval.
+      - id: trail-docs
+        tags: [communication, project-management]
+        text:
+          fr: Rédigé un guide d'utilisation et planifié trois versions successives du projet.
+          en: Wrote a user guide and planned three successive releases of the project.
