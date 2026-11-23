@@ -75,7 +75,8 @@ class Bank(Strict):
 
     def bullets(self) -> list[Bullet]:
         """Return every bullet of every job, then every project, in file order."""
-        return [b for owner in (*self.experiences, *self.projects) for b in owner.bullets]
+        owners: list[Experience | Project] = [*self.experiences, *self.projects]
+        return [b for owner in owners for b in owner.bullets]
 
     @model_validator(mode="after")
     def _check_ids_and_tags(self) -> Self:
