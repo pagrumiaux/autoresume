@@ -30,6 +30,8 @@ def test_examples_bank_directory_exists_and_loads():
 def test_fixtures_directory_has_a_bank_that_loads():
     dirs = _bank_dirs_under(FIXTURES)
     assert dirs, "tests/fixtures/ holds no bank.yaml"
+    bank, _ = load_bank(dirs[0])
+    assert bank.experiences
 
 
 def test_every_bank_under_examples_and_fixtures_loads_without_error():
@@ -39,14 +41,21 @@ def test_every_bank_under_examples_and_fixtures_loads_without_error():
         load_bank(d)
 
 
-def test_examples_bank_has_two_or_three_experiences():
+def test_examples_bank_has_three_experiences_and_two_projects():
     bank, _ = load_bank(EXAMPLES)
-    assert 2 <= len(bank.experiences) <= 3
+    assert len(bank.experiences) == 3
+    assert len(bank.projects) == 2
 
 
-def test_examples_bank_has_six_to_ten_bullets():
+def test_examples_bank_has_fifteen_to_twenty_bullets():
     bank, _ = load_bank(EXAMPLES)
-    assert 6 <= len(bank.bullets()) <= 10
+    assert 15 <= len(bank.bullets()) <= 20
+
+
+def test_examples_bank_has_twelve_to_fifteen_skills_in_three_categories():
+    bank, _ = load_bank(EXAMPLES)
+    assert 12 <= len(bank.skills) <= 15
+    assert len({s.category for s in bank.skills}) == 3
 
 
 def test_examples_bank_has_fr_and_en_text_on_every_entry():
@@ -108,4 +117,4 @@ def test_fake_data_has_no_contact_details(base):
     for content in files:
         assert not re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", content), "email address"
         assert not re.search(r"https?://|www\.|linkedin\.com|github\.com", content), "URL"
-        assert not re.search(r"\+?\d[\d .-]{8,}\d", content.replace("-01", "")), "phone number"
+        assert not re.search(r"\+\d[\d .-]{7,}\d|\b0\d([ .-]?\d{2}){4}\b", content), "phone number"

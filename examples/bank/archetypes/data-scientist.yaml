@@ -1,12 +1,17 @@
 id: data-scientist
 description: Roles centred on modelling and forecasting.
 headline:
-  fr: Analyste quantitative, modèles de prévision
+  fr: Analyste quantitatif, modèles de prévision
   en: Quantitative analyst, forecasting models
-skills_order: [forecasting, python, sql, teamwork, data-pipelines, mentoring]
-bullets: [brightfield-forecast, brightfield-team, nordwind-pipeline, weather-forecast]
-projects: [weather-notebook]
+skills_order:
+  [forecasting, statistics, python, r, visualization, sql, data-modeling, data-pipelines,
+   scala, bash, communication, teamwork, mentoring, project-management]
+bullets:
+  [brightfield-forecast, brightfield-stats, brightfield-team, brightfield-dashboard,
+   nordwind-pipeline, weather-forecast, weather-plots, trail-stats]
+projects: [weather-notebook, trail-planner]
 signals:
   - forecasting
-  - modelling
   - statistics
+  - visualization
+  - A/B testing
