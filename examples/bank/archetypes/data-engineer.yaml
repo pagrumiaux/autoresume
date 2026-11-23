@@ -1,0 +1,12 @@
+id: data-engineer
+description: Roles centred on building and running data pipelines.
+headline:
+  fr: Ingénieure données, pipelines fiables
+  en: Data engineer, reliable pipelines
+skills_order: [python, sql, data-pipelines, teamwork, mentoring, forecasting]
+bullets: [nordwind-pipeline, nordwind-sql, nordwind-mentor, weather-sql]
+projects: [weather-notebook]
+signals:
+  - pipeline
+  - ETL
+  - SQL

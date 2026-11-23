@@ -1,0 +1,36 @@
+# Small fictional bank for unit tests.
+skills:
+  - id: python
+    label: {fr: Python, en: Python}
+    category: languages
+  - id: teamwork
+    label: {fr: Travail en équipe, en: Teamwork}
+    category: soft-skills
+
+experiences:
+  - id: acme-widgets
+    org: Acme Widgets
+    role: {fr: Développeur, en: Developer}
+    start: 2022-01-01
+    end: 2023-12-01
+    bullets:
+      - id: acme-script
+        tags: [python]
+        text:
+          fr: Automatisé un rapport hebdomadaire avec un script Python.
+          en: Automated a weekly report with a Python script.
+      - id: acme-team
+        tags: [teamwork]
+        text:
+          fr: Travaillé avec trois collègues sur une refonte interne.
+          en: Worked with three colleagues on an internal redesign.
+
+projects:
+  - id: toy-project
+    name: Toy Project
+    bullets:
+      - id: toy-bullet
+        tags: [python]
+        text:
+          fr: Écrit un petit jeu de démonstration.
+          en: Wrote a small demo game.
