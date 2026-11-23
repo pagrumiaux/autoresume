@@ -1,0 +1,74 @@
+# Fictional bank for demos and tests. Every person, employer and fact is made up.
+skills:
+  - id: python
+    label: {fr: Python, en: Python}
+    category: languages
+  - id: sql
+    label: {fr: SQL, en: SQL}
+    category: languages
+  - id: data-pipelines
+    label: {fr: Pipelines de données, en: Data pipelines}
+    category: data
+  - id: forecasting
+    label: {fr: Prévision de séries temporelles, en: Time-series forecasting}
+    category: data
+  - id: teamwork
+    label: {fr: Travail en équipe, en: Teamwork}
+    category: soft-skills
+  - id: mentoring
+    label: {fr: Encadrement, en: Mentoring}
+    category: soft-skills
+
+experiences:
+  - id: nordwind-analytics
+    org: Nordwind Analytics
+    role: {fr: Ingénieure données, en: Data engineer}
+    start: 2021-09-01
+    end: 2024-06-01
+    bullets:
+      - id: nordwind-pipeline
+        tags: [python, data-pipelines]
+        text:
+          fr: Conçu un pipeline de données en Python qui a réduit le temps de traitement quotidien de 6 à 2 heures.
+          en: Designed a Python data pipeline that cut the daily processing time from 6 to 2 hours.
+      - id: nordwind-sql
+        tags: [sql]
+        text:
+          fr: Réécrit 40 requêtes SQL lentes, ce qui a divisé par trois la charge de la base de reporting.
+          en: Rewrote 40 slow SQL queries, cutting the load on the reporting database by a factor of three.
+      - id: nordwind-mentor
+        tags: [mentoring, teamwork]
+        text:
+          fr: Encadré deux stagiaires pendant six mois et animé les revues de code hebdomadaires de l'équipe.
+          en: Mentored two interns for six months and led the team's weekly code reviews.
+  - id: brightfield-labs
+    org: Brightfield Labs
+    role: {fr: Analyste quantitative, en: Quantitative analyst}
+    start: 2018-10-01
+    end: 2021-08-01
+    bullets:
+      - id: brightfield-forecast
+        tags: [forecasting, python]
+        text:
+          fr: Développé un modèle de prévision de la demande dont l'erreur moyenne était inférieure de 12 % à la méthode précédente.
+          en: Built a demand forecasting model whose average error was 12% lower than the previous method.
+      - id: brightfield-team
+        tags: [teamwork]
+        text:
+          fr: Collaboré avec quatre équipes produit pour définir les indicateurs de suivi du modèle.
+          en: Worked with four product teams to define the monitoring metrics for the model.
+
+projects:
+  - id: weather-notebook
+    name: Weather Notebook
+    bullets:
+      - id: weather-sql
+        tags: [sql, data-pipelines]
+        text:
+          fr: Créé un carnet personnel qui charge des relevés météo fictifs dans une base SQL et trace leurs tendances.
+          en: Created a personal notebook that loads made-up weather readings into a SQL database and plots their trends.
+      - id: weather-forecast
+        tags: [forecasting]
+        text:
+          fr: Comparé trois méthodes de prévision sur ces relevés et documenté les résultats.
+          en: Compared three forecasting methods on those readings and documented the results.

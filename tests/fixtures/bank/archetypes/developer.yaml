@@ -1,0 +1,10 @@
+id: developer
+description: A single archetype for unit tests.
+headline:
+  fr: Développeur polyvalent
+  en: General developer
+skills_order: [python, teamwork]
+bullets: [acme-script, acme-team]
+projects: [toy-project]
+signals:
+  - python
