@@ -1,6 +1,6 @@
 """Spec for the bank and archetype schemas (docs/decisions/2026-11-23-bank-schema.md).
 
-Every test is xfail(strict=True) until the models are written: remove the marker when it passes.
+Spec for the schema; every test passes.
 """
 
 import copy
@@ -11,8 +11,6 @@ import pytest
 from pydantic import ValidationError
 
 from autoresume.bank import Archetype, Bank, Text
-
-pytestmark = pytest.mark.xfail(strict=True)
 
 BANK: dict[str, Any] = {
     "skills": [
