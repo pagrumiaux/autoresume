@@ -6,17 +6,13 @@ Goal: `autoresume render` exposes the render function on the command line, readi
 
 from pathlib import Path
 
-from pypdf import PdfReader
 from typer.testing import CliRunner
 
 from autoresume.cli import app
+from autoresume.render import page_count
 
 runner = CliRunner()
 EXAMPLES = Path(__file__).resolve().parents[1] / "examples" / "bank"
-
-
-def _pages(pdf: Path) -> int:
-    return len(PdfReader(pdf).pages)
 
 
 def test_render_with_bank_option_writes_one_page_pdf(tmp_path, monkeypatch):
@@ -38,7 +34,7 @@ def test_render_with_bank_option_writes_one_page_pdf(tmp_path, monkeypatch):
     )
     assert result.exit_code == 0, result.output
     assert out.read_bytes().startswith(b"%PDF")
-    assert _pages(out) == 1
+    assert page_count(out) == 1
 
 
 def test_render_without_bank_reads_autoresume_data_dir(tmp_path, monkeypatch):
@@ -48,7 +44,7 @@ def test_render_without_bank_reads_autoresume_data_dir(tmp_path, monkeypatch):
         app, ["render", "--archetype", "data-engineer", "--lang", "fr", "--out", str(out)]
     )
     assert result.exit_code == 0, result.output
-    assert _pages(out) == 1
+    assert page_count(out) == 1
 
 
 def test_render_without_bank_and_unset_env_exits_with_clear_message(tmp_path, monkeypatch):
