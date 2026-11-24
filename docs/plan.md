@@ -111,13 +111,28 @@ Each later phase is added here with `/jam` before it starts.
 - acceptance:
   - the issue that closes this task names the chosen direction and lists the wanted changes as a checklist (e.g. margins, columns, section order, fonts)
 
+### P0.S18 — Education in the bank schema
+- goal: The bank has an `education` list (institution, degree, optional topic, start and end years), so the resume template prints degrees from the bank like everything else.
+- depends_on: [P0.S8, P0.S17]
+- touches: [src/autoresume/bank/schema.py, tests/bank/, examples/bank/bank.yaml, tests/fixtures/bank/bank.yaml, tests/test_fixtures.py]
+- read_first: [docs/decisions/2026-11-23-bank-schema.md#decision, docs/decisions/2026-11-24-education-on-bank.md#decision]
+- size: M
+- acceptance:
+  - `Bank` has a required `education` list; each entry has `institution` (non-empty string), `degree` (FR and EN text), an optional `topic` (FR and EN text), `start` (int year) and `end` (int year, omitted for an ongoing programme)
+  - a year outside 1900–2100, or a `start` after the `end`, is rejected with an error naming the entry's institution
+  - a bank without `education` is rejected with an error naming the field
+  - `examples/bank/` and `tests/fixtures/` each have at least one fictional education entry with FR and EN text, and every bank built in the tests loads
+  - the whole test suite and `ruff check` pass
+- notes: `bank/schema.py` is a co-designed area. The user explicitly authorised an agent to write this model, for this task only, on 2026-11-24. Do not change other files in `bank/`.
+
 ### P0.S11 — Resume Typst template
 - goal: The chosen layout as a Typst template that reads resume data instead of hard-coded text, in FR or EN.
-- depends_on: [P0.S8, P0.S10]
+- depends_on: [P0.S8, P0.S10, P0.S18]
 - touches: [src/autoresume/render/templates/, tests/render/test_template.py]
 - acceptance:
   - compiling the template with hand-built data matching the fake bank and each fake archetype gives a one-page PDF, in FR and in EN
   - text in the PDF is extractable with pypdf
+  - the template prints each education entry (institution, degree, years) in FR and in EN
   - the PR description lists each checklist item from the P0.S10 issue and how it was addressed
 - notes: Read the P0.S10 issue first: `gh issue list --state closed --search "P0.S10 in:title"`. The step that builds template data from a bank comes in P0.S12.
 
@@ -127,6 +142,7 @@ Each later phase is added here with `/jam` before it starts.
 - touches: [src/autoresume/render/__init__.py, src/autoresume/render/render.py, tests/render/test_render.py]
 - acceptance:
   - `render(bank, archetype, lang, out)` writes a PDF for the fake bank and each fake archetype, in FR and EN
+  - the PDF built from the fake bank contains each of its education entries
   - `page_count(pdf)` returns 1 for those outputs, and 2 for a resume the test builds to overflow the page
 
 ### P0.S13 — `render` command
@@ -140,9 +156,10 @@ Each later phase is added here with `/jam` before it starts.
 
 ### P0.S14 — [Human] Fill the bank
 - goal: You write your real experience bank in FR and EN in `autoresume-data`, starting with current experiences.
-- depends_on: [P0.S1, P0.S17]
+- depends_on: [P0.S1, P0.S17, P0.S18]
 - acceptance:
   - `uv run python -c "from autoresume.bank import load_bank; load_bank('$AUTORESUME_DATA_DIR')"` runs without errors
+  - `uv run python -c "from autoresume.bank import load_bank; b, _ = load_bank('$AUTORESUME_DATA_DIR'); assert len(b.education) >= 3"` runs without errors
 
 ### P0.S15 — [Human] Draft and refine the seed archetypes
 - goal: With Claude, draft 3–4 seed archetypes from your filled bank, then refine them yourself, keeping both versions.
@@ -154,7 +171,7 @@ Each later phase is added here with `/jam` before it starts.
 
 ### P0.Z — Cleanup
 - goal: Remove duplication and simplify the phase's code, with no change in behaviour.
-- depends_on: [P0.S2, P0.S3, P0.S4, P0.S6, P0.S8, P0.S9, P0.S11, P0.S12, P0.S13, P0.S17]
+- depends_on: [P0.S2, P0.S3, P0.S4, P0.S6, P0.S8, P0.S9, P0.S11, P0.S12, P0.S13, P0.S17, P0.S18]
 - touches: [src/autoresume/render/, src/autoresume/cli.py, src/autoresume/bank/loader.py, tests/, scripts/]
 - acceptance:
   - no duplicated helpers across the phase; all existing tests pass unchanged
@@ -163,7 +180,7 @@ Each later phase is added here with `/jam` before it starts.
 
 ### P0.D — Docs
 - goal: A README that explains what autoresume is, how to install it and how to render a resume from the example bank, and a Phase 0 entry in the CHANGELOG.
-- depends_on: [P0.S2, P0.S3, P0.S4, P0.S6, P0.S8, P0.S9, P0.S11, P0.S12, P0.S13, P0.S17]
+- depends_on: [P0.S2, P0.S3, P0.S4, P0.S6, P0.S8, P0.S9, P0.S11, P0.S12, P0.S13, P0.S17, P0.S18]
 - touches: [README.md, CHANGELOG.md]
 - acceptance:
   - README covers install (`uv sync`), setting `AUTORESUME_DATA_DIR`, and `autoresume render` with the example bank
