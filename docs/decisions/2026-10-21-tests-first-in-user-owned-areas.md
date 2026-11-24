@@ -1,7 +1,7 @@
 # Agents write tests and stubs; I implement my own areas
 - Date: 2026-10-21
 - Area: workflow, bank, llm, agents, feedback, evals
-- Status: accepted
+- Status: superseded in part by 2026-11-25-core-by-user-plumbing-by-agents.md (who implements)
 - Source: /jam
 
 ## Context
