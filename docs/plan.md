@@ -193,8 +193,172 @@ Each later phase is added here with `/jam` before it starts.
 
 ### P0.S16 — [Human] Phase 0 retro
 - goal: You write what you learned in Phase 0 and what should change in the plan, before Phase 1 is planned.
-- dropped: true
-- reason: folded into Phase 1 planning
 - depends_on: [P0.Z, P0.D, P0.S15]
 - acceptance:
   - `docs/retros/phase-0.md` exists with what you learned and what changed in the plan
+- dropped: true
+- reason: You chose to skip the Phase 0 retro on 2026-11-24; Phase 1 is planned without it.
+
+## Phase 1 — Single structured call
+
+### P1.S1 — [Human] Create the OpenRouter key and set it
+- goal: You create the OpenRouter account and API key that the LLM client will use.
+- depends_on: []
+- acceptance:
+  - the variable OPENROUTER_API_KEY is set in your shell profile (never paste its value into the plan, an issue or a PR)
+
+### P1.S2 — Fake job descriptions and canned model replies
+- goal: Fake FR and EN job descriptions and canned model replies (valid and invalid) in `tests/fixtures/`, so the LLM tasks are tested without network or real data.
+- depends_on: []
+- touches: [tests/fixtures/jobs/, tests/fixtures/llm/, tests/test_fixtures.py]
+- acceptance:
+  - at least one EN and one FR fake job description, each under 300 words, clearly fictional
+  - one canned reply that is valid JSON and one that is invalid JSON or breaks the schema
+  - `uv run pytest tests/test_fixtures.py` checks the files exist and the pre-commit data guard still passes
+- size: S
+
+### P1.S3 — Tests and stubs for the tailoring decisions schema
+- goal: Failing tests and `TODO(PA)` stubs for the model of what the LLM returns for one job, so you can write it against a clear spec.
+- depends_on: [P0.S15]
+- touches: [src/autoresume/agents/schema.py, tests/agents/test_schema.py]
+- read_first: [src/autoresume/bank/schema.py, docs/decisions/2026-10-06-selection-over-generation.md#decision, docs/decisions/2026-10-21-tests-first-in-user-owned-areas.md]
+- acceptance:
+  - the stub `TailoringDecisions` has a docstring of the expected behaviour and `TODO(PA)`, and no implementation; its fields are `language` (`en` or `fr`), `bullets` (ids to add and to remove), `skills_order` (ids), `headline` (optional FR and EN text) and `rationale` (string)
+  - tests cover: a language other than `en` or `fr` is rejected; `TailoringDecisions.model_validate(data, context={"bank": bank})` raises ValidationError for a bullet id or skill id not in the bank; an empty rationale is rejected
+  - each test has a one-line docstring and is marked `xfail(strict=True)`; `uv run pytest` passes
+- test_first: false
+- notes: Principle 2 of docs/design.md: small deltas on top of an archetype, never new claims. Do not implement the model.
+
+### P1.S4 — [Human] Write the tailoring decisions schema
+- goal: You read the P1.S3 tests and write the Pydantic model that makes them pass.
+- depends_on: [P1.S3]
+- acceptance:
+  - every test in `tests/agents/test_schema.py` passes with its xfail marker removed
+  - PR titled `P1.S4: …`, reviewed by pr-reviewer, merged
+
+### P1.S5 — Tests and stubs for the LLM config, client and call log
+- goal: Failing tests and `TODO(PA)` stubs for `llm/`: the config, the OpenRouter client with structured output and retry, and the call log.
+- depends_on: [P1.S2]
+- touches: [src/autoresume/llm/, tests/llm/]
+- read_first: [docs/decisions/2026-10-21-tests-first-in-user-owned-areas.md]
+- acceptance:
+  - stubs for `load_config`, the client and the log writer have a docstring of the expected behaviour and `TODO(PA)`, and no implementation
+  - tests cover: `config.yaml` has the shape `models: {<step>: <model name>}` and `max_retries: <int>`, and a missing model name for a step raises a clear error; the request body sent by the faked client has `provider.require_parameters` set to true; an invalid reply is retried up to `max_retries` then raises an error containing the validation message; each call, including each retry, appends one JSONL line with provider, model, tokens, cost, latency and step; the log path is under `AUTORESUME_DATA_DIR`
+  - each test has a one-line docstring and is marked `xfail(strict=True)`; `uv run pytest` passes
+- test_first: false
+- notes: Do not implement. Network is always faked. Follow docs/decisions/2026-11-24-openrouter-json-schema-output.md.
+
+### P1.S6 — [Human] LLM config and OpenRouter client
+- goal: You write the config reader and the client on the `openai` SDK with OpenRouter's `base_url`, asking for JSON-schema output, parsing it into a Pydantic model and retrying on validation failure.
+- depends_on: [P1.S1, P1.S5]
+- acceptance:
+  - the config and client tests in `tests/llm/` pass with their xfail markers removed
+  - the model name comes from config, not from code
+  - PR titled `P1.S6: …`, reviewed by pr-reviewer, merged
+
+### P1.S7 — [Human] LLM call log
+- goal: You write the JSONL log of every LLM call that AGENTS.md requires, with cost taken from OpenRouter's usage data, and call it from the client.
+- depends_on: [P1.S6]
+- acceptance:
+  - the log tests in `tests/llm/` pass with their xfail markers removed
+  - PR titled `P1.S7: …`, reviewed by pr-reviewer, merged
+
+### P1.S8 — Apply decisions and render
+- goal: A function that applies validated tailoring decisions to an archetype, giving a derived archetype, and renders it to a PDF with the existing render function.
+- depends_on: [P1.S4]
+- touches: [src/autoresume/render/apply.py, tests/render/test_apply.py]
+- read_first: [src/autoresume/render/render.py, src/autoresume/bank/schema.py]
+- acceptance:
+  - added and removed bullets, a new skills order and a new headline show in the rendered data
+  - the result is a one-page PDF for a fixture bank
+  - the original archetype object is unchanged
+
+### P1.S9 — Tests and stubs for the tailoring step
+- goal: Failing tests and a `TODO(PA)` stub for the step that turns a job description, the bank and an archetype into validated tailoring decisions with one structured call.
+- depends_on: [P1.S4, P1.S6, P1.S7]
+- touches: [src/autoresume/agents/tailor.py, tests/agents/test_tailor.py]
+- read_first: [docs/decisions/2026-10-21-tests-first-in-user-owned-areas.md]
+- acceptance:
+  - the stub `tailor(jd, bank, archetype, client)` has a docstring and `TODO(PA)`, and no implementation
+  - tests with the fake client cover: a valid reply gives validated decisions; an invalid reply is retried then fails clearly; the EN fixture job description gives language `en` and the FR one `fr` (replies canned); an id not in the bank is rejected
+  - each test has a one-line docstring and is marked `xfail(strict=True)`; `uv run pytest` passes
+- test_first: false
+
+### P1.S10 — [Human] Tailoring step
+- goal: You write the step in `agents/` that makes the structured call and returns the validated decisions, with the language inferred from the job description.
+- depends_on: [P1.S9]
+- acceptance:
+  - the tests in `tests/agents/test_tailor.py` pass with their xfail markers removed
+  - PR titled `P1.S10: …`, reviewed by pr-reviewer, merged
+
+### P1.S11 — `tailor` command
+- goal: `autoresume tailor` takes a job description file and an archetype, runs the tailoring step and writes the PDF, so a first tailored resume takes one command.
+- depends_on: [P1.S8, P1.S10]
+- touches: [src/autoresume/cli.py, tests/test_cli_tailor.py]
+- acceptance:
+  - `uv run autoresume tailor --jd <file> --archetype <id> --out <file>` writes a one-page PDF in the language of the job description, with the LLM faked in tests
+  - a missing key, unset AUTORESUME_DATA_DIR, an unknown archetype or an unreadable file exits non-zero with a clear message, not a traceback
+  - the command prints the detected language and the rationale
+
+### P1.S12 — Tests and stubs for the `add-experience` interview
+- goal: Failing tests and a `TODO(PA)` stub for an LLM interview that ends with a draft bank entry that validates against the bank schema.
+- depends_on: [P1.S6, P1.S7]
+- touches: [src/autoresume/agents/interview.py, tests/agents/test_interview.py]
+- read_first: [src/autoresume/bank/schema.py, docs/decisions/2026-10-21-tests-first-in-user-owned-areas.md]
+- acceptance:
+  - the stub has a docstring and `TODO(PA)`, and no implementation
+  - tests with a scripted fake client cover: a short conversation ends with a draft that is valid for the bank schema; an invalid draft sends the validation errors back to the model and asks again, up to a limit; every bullet has FR and EN text; the entry kind is a job, a project or a skill
+  - each test has a one-line docstring and is marked `xfail(strict=True)`; `uv run pytest` passes
+- test_first: false
+
+### P1.S13 — [Human] `add-experience` interview
+- goal: You write the interview in `agents/`: an LLM conversation that asks you about a new job, project or skill and ends with a draft entry.
+- depends_on: [P1.S12]
+- acceptance:
+  - the tests in `tests/agents/test_interview.py` pass with their xfail markers removed
+  - PR titled `P1.S13: …`, reviewed by pr-reviewer, merged
+
+### P1.S14 — Append an entry to the bank file
+- goal: A loader function that adds a validated entry to the bank file without rewriting the rest of the file.
+- depends_on: []
+- touches: [src/autoresume/bank/loader.py, tests/bank/test_loader_append.py, pyproject.toml, uv.lock]
+- read_first: [src/autoresume/bank/loader.py]
+- acceptance:
+  - after appending, `load_bank` passes and the new entry is in the bank
+  - existing entries, ids, comments and order in the file are unchanged
+  - a duplicate id raises a clear error and the file is unchanged
+  - if a new dependency is added (for example ruamel.yaml), the same PR adds its decision record
+- notes: Only `bank/loader.py` changes in `bank/`; do not touch the schema.
+
+### P1.S15 — `add-experience` command
+- goal: `autoresume add-experience` runs the interview, shows the validated YAML entry and writes it into the bank only after you confirm.
+- depends_on: [P1.S11, P1.S13, P1.S14]
+- touches: [src/autoresume/cli.py, tests/test_cli_add_experience.py]
+- acceptance:
+  - after a confirmed interview (LLM faked) the new entry is in the bank file and `load_bank` still passes
+  - when you decline, the bank file is byte-for-byte unchanged
+  - a missing key or unset AUTORESUME_DATA_DIR exits non-zero with a clear message, not a traceback
+
+### P1.Z — Cleanup
+- goal: Remove duplication and simplify the phase's code outside `agents/` and `llm/`, with no change in behaviour.
+- depends_on: [P1.S2, P1.S3, P1.S5, P1.S8, P1.S9, P1.S11, P1.S12, P1.S14, P1.S15]
+- touches: [src/autoresume/render/, src/autoresume/bank/loader.py, src/autoresume/cli.py, tests/]
+- acceptance:
+  - no duplicated helpers across the phase; all existing tests pass unchanged
+  - `git diff --stat origin/main -- src/autoresume/agents/ src/autoresume/llm/` is empty
+- test_first: false
+
+### P1.D — Docs
+- goal: README sections for `tailor`, `add-experience` and the OpenRouter setup, and a Phase 1 entry in the CHANGELOG.
+- depends_on: [P1.S2, P1.S3, P1.S5, P1.S8, P1.S9, P1.S11, P1.S12, P1.S14, P1.S15]
+- touches: [README.md, CHANGELOG.md]
+- acceptance:
+  - README covers OPENROUTER_API_KEY, the `config.yaml` keys (`models`, `max_retries`), `autoresume tailor` and `autoresume add-experience`
+  - CHANGELOG has a Phase 1 entry
+- agent: docs-writer
+
+### P1.S16 — [Human] Phase 1 retro
+- goal: You write what you learned in Phase 1, which models gave the best quality for the cost, and what should change in the plan.
+- depends_on: [P1.Z, P1.D, P1.S10, P1.S13]
+- acceptance:
+  - `docs/retros/phase-1.md` exists with what you learned, the models compared with their cost, and what changed in the plan
