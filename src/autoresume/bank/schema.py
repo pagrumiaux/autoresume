@@ -18,6 +18,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 NonEmptyStr = Annotated[str, Field(min_length=1)]
 
 
+MIN_YEAR, MAX_YEAR = 1900, 2100
+
+
 class Strict(BaseModel):
     """Base of every model: unknown keys are errors (catches typos like `levl`)."""
 
@@ -66,10 +69,37 @@ class Project(Strict):
     bullets: list[Bullet]
 
 
+class Education(Strict):
+    """A degree. Years are integers (a resume prints years only); `end` is omitted if ongoing."""
+
+    institution: NonEmptyStr
+    degree: Text
+    topic: Text | None = None
+    start: int
+    end: int | None = None
+
+    @model_validator(mode="after")
+    def _check_years(self) -> Self:
+        # Model level, not Field(ge/le): the error must name the institution.
+        for name in ("start", "end"):
+            year = getattr(self, name)
+            if year is not None and not MIN_YEAR <= year <= MAX_YEAR:
+                raise ValueError(
+                    f"education {self.institution!r}: {name} year {year} is outside "
+                    f"{MIN_YEAR}-{MAX_YEAR}"
+                )
+        if self.end is not None and self.start > self.end:
+            raise ValueError(
+                f"education {self.institution!r}: start {self.start} is after end {self.end}"
+            )
+        return self
+
+
 class Bank(Strict):
     """The whole `bank.yaml`."""
 
     skills: list[Skill]
+    education: list[Education]  # required; an explicit empty list is valid
     experiences: list[Experience]
     projects: list[Project]
 

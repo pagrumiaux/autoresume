@@ -7,6 +7,12 @@ skills:
     label: {fr: Travail en équipe, en: Teamwork}
     category: soft-skills
 
+education:
+  - institution: Université d'Exemple
+    degree: {fr: Master informatique, en: MSc Computer Science}
+    topic: {fr: Apprentissage automatique, en: Machine learning}
+    start: 2018
+    end: 2020
 experiences:
   - id: acme-widgets
     org: Acme Widgets

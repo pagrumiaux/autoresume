@@ -149,7 +149,7 @@ def test_missing_bank_yaml_raises_clear_error(tmp_path):
 
 def test_duplicate_experience_ids_rejected_naming_file_and_id(tmp_path):
     second = EXPERIENCE.replace("acme-denoiser", "other-bullet")  # same experience id
-    bank = f"{SKILLS}experiences:\n{EXPERIENCE}{second}projects:\n{PROJECT}"
+    bank = f"{SKILLS}{EDUCATION}experiences:\n{EXPERIENCE}{second}projects:\n{PROJECT}"
     make_bank(tmp_path, bank=bank, archetypes={})
     with pytest.raises(BankLoadError, match=r"bank\.yaml") as exc:
         load_bank(tmp_path)
@@ -158,7 +158,7 @@ def test_duplicate_experience_ids_rejected_naming_file_and_id(tmp_path):
 
 def test_duplicate_project_ids_rejected_naming_file_and_id(tmp_path):
     second = PROJECT.replace("toy-synth-vst", "other-bullet")  # same project id
-    bank = f"{SKILLS}experiences:\n{EXPERIENCE}projects:\n{PROJECT}{second}"
+    bank = f"{SKILLS}{EDUCATION}experiences:\n{EXPERIENCE}projects:\n{PROJECT}{second}"
     make_bank(tmp_path, bank=bank, archetypes={})
     with pytest.raises(BankLoadError, match=r"bank\.yaml") as exc:
         load_bank(tmp_path)
