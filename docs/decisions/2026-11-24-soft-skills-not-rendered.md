@@ -14,5 +14,5 @@ The Typst template drops every skill whose `category` is `soft`. Such skills onl
 - Render them in a separate "Soft skills" block: takes sidebar space on a one-page resume.
 
 ## Consequences
-The filter is on the exact category name `soft`. The fake banks (`examples/bank`, `tests/fixtures/bank`) still name it `soft-skills`, so they are not filtered yet; they are renamed to `soft` in issue #20. Bank authors must use `soft` for skills that should stay off the page.
+The filter is on the exact category name `soft`. The fake banks (`examples/bank`, `tests/fixtures/bank`) now use `soft` too (renamed in #23, issue #20), so they are filtered. Bank authors must use `soft` for skills that should stay off the page.
  P0.S12 should also drop `soft` skills when it builds the template data; the template filter is a second safety net.\n

@@ -5,7 +5,7 @@ skills:
     category: languages
   - id: teamwork
     label: {fr: Travail en équipe, en: Teamwork}
-    category: soft-skills
+    category: soft
 
 education:
   - institution: Université d'Exemple
