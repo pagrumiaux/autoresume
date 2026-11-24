@@ -19,7 +19,7 @@ Instructions for every coding agent working in this repo. Keep it under ~100 lin
 - Run locally: `uv run autoresume --help`
 
 ## Ownership
-The user implements some areas themselves, to learn. In those areas, never write implementation code, even if a task seems to ask for it. Allowed there: failing tests marked `@pytest.mark.xfail(strict=True)`, each with a one-line docstring, and stubs with `TODO(PA)` and a docstring of the expected behaviour (see `docs/decisions/2026-10-21-tests-first-in-user-owned-areas.md`).
+The user writes the *core* of the areas `llm/`, `agents/`, `feedback/` and `evals/` themselves, to learn: prompts, agent loops, validators, metrics. For the core, never write implementation code, even if a task seems to ask for it. Allowed there: failing tests marked `@pytest.mark.xfail(strict=True)`, each with a one-line docstring; stubs with `TODO(PA)` and a docstring of the expected behaviour; and a learning brief `docs/learning/<ID>.md` with concepts, API docs links and common traps, but no solution code. Agents implement the plumbing around it (see `docs/decisions/2026-11-25-core-by-user-plumbing-by-agents.md`).
 
 | Area | Who implements |
 | --- | --- |
@@ -27,12 +27,10 @@ The user implements some areas themselves, to learn. In those areas, never write
 | Typst templates, rendering plumbing, file I/O (`render/`) | Agents |
 | CLI plumbing (Typer commands, prompts, output) | Agents |
 | Test fixtures, fake sample data | Agents |
-| Bank and archetype Pydantic schemas (`bank/`, except `loader.py`) | Co-designed: agents propose and test, the user writes |
-| Bank YAML loaders (`bank/loader.py`) | Agents |
-| Provider adapters and routing (`llm/`) | User |
-| Agent loop, agents, orchestration (`agents/`) | User |
-| Feedback log, lessons, archetype learning (`feedback/`) | User |
-| Drift, traceability and eval metrics (`evals/`, checks) | User |
+| Bank and archetype Pydantic schemas (`bank/`, except `loader.py` and `writer.py`) | Co-designed: agents propose and test, the user writes |
+| Bank YAML loaders and writer (`bank/loader.py`, `bank/writer.py`) | Agents |
+| Plumbing in `llm/`, `agents/`, `feedback/`, `evals/` (provider clients, call logging, CLI wiring, file I/O) | Agents |
+| Core in those areas: prompts, agent loops, validators, metrics (the plan's `[Human]` tasks) | User, coached |
 
 ## Privacy
 - This repo is **public**. Personal data lives in the private `autoresume-data` repo.
