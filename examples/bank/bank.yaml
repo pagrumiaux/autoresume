@@ -43,6 +43,16 @@ skills:
     label: {fr: Gestion de projet, en: Project management}
     category: soft-skills
 
+education:
+  - institution: Université d'Exemple
+    degree: {fr: Master en statistiques appliquées, en: MSc in Applied Statistics}
+    topic: {fr: Prévision de séries temporelles, en: Time-series forecasting}
+    start: 2016
+    end: 2018
+  - institution: École Fictive des Sciences
+    degree: {fr: Licence de mathématiques, en: BSc in Mathematics}
+    start: 2013
+    end: 2016
 experiences:
   - id: nordwind-analytics
     org: Nordwind Analytics

@@ -43,7 +43,15 @@ skills:
     category: ml
 """
 
-BANK_YAML = f"{SKILLS}experiences:\n{EXPERIENCE}projects:\n{PROJECT}"
+EDUCATION = """\
+education:
+  - institution: Université d'Exemple
+    degree: {fr: Master informatique, en: MSc Computer Science}
+    start: 2018
+    end: 2020
+"""
+
+BANK_YAML = f"{SKILLS}{EDUCATION}experiences:\n{EXPERIENCE}projects:\n{PROJECT}"
 
 ROOT_ARCHETYPE = """\
 id: research
@@ -141,7 +149,7 @@ def test_missing_bank_yaml_raises_clear_error(tmp_path):
 
 def test_duplicate_experience_ids_rejected_naming_file_and_id(tmp_path):
     second = EXPERIENCE.replace("acme-denoiser", "other-bullet")  # same experience id
-    bank = f"{SKILLS}experiences:\n{EXPERIENCE}{second}projects:\n{PROJECT}"
+    bank = f"{SKILLS}{EDUCATION}experiences:\n{EXPERIENCE}{second}projects:\n{PROJECT}"
     make_bank(tmp_path, bank=bank, archetypes={})
     with pytest.raises(BankLoadError, match=r"bank\.yaml") as exc:
         load_bank(tmp_path)
@@ -150,7 +158,7 @@ def test_duplicate_experience_ids_rejected_naming_file_and_id(tmp_path):
 
 def test_duplicate_project_ids_rejected_naming_file_and_id(tmp_path):
     second = PROJECT.replace("toy-synth-vst", "other-bullet")  # same project id
-    bank = f"{SKILLS}experiences:\n{EXPERIENCE}projects:\n{PROJECT}{second}"
+    bank = f"{SKILLS}{EDUCATION}experiences:\n{EXPERIENCE}projects:\n{PROJECT}{second}"
     make_bank(tmp_path, bank=bank, archetypes={})
     with pytest.raises(BankLoadError, match=r"bank\.yaml") as exc:
         load_bank(tmp_path)
@@ -163,3 +171,16 @@ def test_empty_extends_rejected_naming_file(tmp_path):
     with pytest.raises(BankLoadError, match=r"research-audio\.yaml") as exc:
         load_bank(tmp_path)
     assert "extends" in str(exc.value)
+
+
+def test_bank_yaml_without_education_names_file_and_field(tmp_path):
+    """A bank.yaml with no education list is rejected, naming file and field (P0.S18)."""
+    no_edu = f"{SKILLS}experiences:\n{EXPERIENCE}projects:\n{PROJECT}"
+    with pytest.raises(BankLoadError, match=r"(?s)bank\.yaml.*education"):
+        load_bank(make_bank(tmp_path, bank=no_edu))
+
+
+def test_bank_yaml_education_years_are_loaded_as_integers(tmp_path):
+    """Education years in YAML come out as ints (P0.S18)."""
+    bank, _ = load_bank(make_bank(tmp_path))
+    assert (bank.education[0].start, bank.education[0].end) == (2018, 2020)
