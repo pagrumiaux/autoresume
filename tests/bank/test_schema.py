@@ -21,6 +21,14 @@ BANK: dict[str, Any] = {
             "category": "audio",
         },
     ],
+    "education": [
+        {
+            "institution": "Université d'Exemple",
+            "degree": {"fr": "Master informatique", "en": "MSc Computer Science"},
+            "start": 2018,
+            "end": 2020,
+        }
+    ],
     "experiences": [
         {
             "id": "acme-2022",

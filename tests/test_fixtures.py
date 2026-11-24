@@ -118,3 +118,16 @@ def test_fake_data_has_no_contact_details(base):
         assert not re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", content), "email address"
         assert not re.search(r"https?://|www\.|linkedin\.com|github\.com", content), "URL"
         assert not re.search(r"\+\d[\d .-]{7,}\d|\b0\d([ .-]?\d{2}){4}\b", content), "phone number"
+
+
+# --- Education (P0.S18): every bank has a fictional entry with FR and EN text ---
+
+
+@pytest.mark.parametrize("base", BANK_DIRS, ids=["examples", "fixtures"])
+def test_bank_has_a_fictional_education_entry_with_fr_and_en_text(base):
+    bank, _ = load_bank(_bank_dirs_under(base)[0])
+    assert bank.education
+    for entry in bank.education:
+        assert entry.institution.strip()
+        assert entry.degree.fr.strip()
+        assert entry.degree.en.strip()
