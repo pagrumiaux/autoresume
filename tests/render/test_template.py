@@ -212,7 +212,7 @@ def test_identity_card_omits_a_link_that_is_not_given():
 )
 def test_section_titles_follow_the_language(lang, present, absent):
     data = _example_data(lang)
-    data["category_titles"] = {"soft-skills": "Savoir-etre" if lang == "fr" else "Interpersonal"}
+    data["category_titles"] = {"data": "Savoir-etre" if lang == "fr" else "Interpersonal"}
     text = _text(_compile(data)).lower()
     assert ("savoir-etre" if lang == "fr" else "interpersonal") in text
     for title in present:

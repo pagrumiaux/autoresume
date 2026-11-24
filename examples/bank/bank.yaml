@@ -32,16 +32,16 @@ skills:
     category: data
   - id: teamwork
     label: {fr: Travail en équipe, en: Teamwork}
-    category: soft-skills
+    category: soft
   - id: mentoring
     label: {fr: Encadrement, en: Mentoring}
-    category: soft-skills
+    category: soft
   - id: communication
     label: {fr: Communication, en: Communication}
-    category: soft-skills
+    category: soft
   - id: project-management
     label: {fr: Gestion de projet, en: Project management}
-    category: soft-skills
+    category: soft
 
 education:
   - institution: Université d'Exemple
