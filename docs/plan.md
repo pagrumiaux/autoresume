@@ -193,6 +193,8 @@ Each later phase is added here with `/jam` before it starts.
 
 ### P0.S16 — [Human] Phase 0 retro
 - goal: You write what you learned in Phase 0 and what should change in the plan, before Phase 1 is planned.
+- dropped: true
+- reason: folded into Phase 1 planning
 - depends_on: [P0.Z, P0.D, P0.S15]
 - acceptance:
   - `docs/retros/phase-0.md` exists with what you learned and what changed in the plan
