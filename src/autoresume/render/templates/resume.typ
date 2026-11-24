@@ -3,8 +3,7 @@
 // Every key must be present; null is allowed only for phone, website, github, scholar, music,
 // topic and end. Optional: category_titles {category id: heading}, used for skill headings
 // (fallback: built-in languages/data titles, then the raw category id).
-// The page height is fixed to A4, so overflow is not visible here: the page-count check of
-// P0.S12 catches it.
+// Overflow flows to a second page; the page-count check of P0.S12 catches it.
 // Keys: lang ("fr"|"en"), name, title, phone, website, github, scholar, music, headline,
 // skills [{label, category}], education [{institution, degree, topic, start, end}],
 // experiences [{org, role, start, end, bullets}], projects [{name, bullets}].
@@ -30,7 +29,11 @@
 #let side-bg = rgb("#eef2f7")
 #let muted = rgb("#555555")
 
-#set page(paper: "a4", margin: 0pt)
+#set page(
+  paper: "a4",
+  margin: 0pt,
+  background: place(top + left, rect(width: 6.2cm, height: 100%, fill: side-bg)),
+)
 #set text(font: "Libertinus Serif", size: 9.5pt)
 #set par(leading: 0.5em)
 #set list(spacing: 0.45em, indent: 0pt, body-indent: 0.5em)
@@ -145,7 +148,6 @@
 
 #grid(
   columns: (6.2cm, 1fr),
-  rows: (297mm,),
-  grid.cell(fill: side-bg)[#sidebar],
+  sidebar,
   main,
 )

@@ -86,6 +86,8 @@ def _bank(skills: list[dict], bullets: int = 1, bullet_words: int = 8) -> tuple[
     archetype = Archetype.model_validate(
         {
             "id": "arch",
+            "description": "Test archetype",
+            "signals": [],
             "headline": {"fr": "Titre", "en": "Headline"},
             "skills_order": [s["id"] for s in skills],
             "bullets": [b["id"] for b in bullet_list],
