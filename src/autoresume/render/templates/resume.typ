@@ -1,5 +1,10 @@
 // One-page resume, sidebar layout (P0.S10 direction, examples/layouts/sidebar.typ).
 // Input: one JSON string in `sys.inputs.data`, already resolved to one language.
+// Every key must be present; null is allowed only for phone, website, github, scholar, music,
+// topic and end. Optional: category_titles {category id: heading}, used for skill headings
+// (fallback: built-in languages/data titles, then the raw category id).
+// The page height is fixed to A4, so overflow is not visible here: the page-count check of
+// P0.S12 catches it.
 // Keys: lang ("fr"|"en"), name, title, phone, website, github, scholar, music, headline,
 // skills [{label, category}], education [{institution, degree, topic, start, end}],
 // experiences [{org, role, start, end, bullets}], projects [{name, bullets}].
@@ -10,10 +15,10 @@
 
 #let titles = if fr {
   (skills: "Compétences", education: "Formation", experience: "Expérience", projects: "Projets",
-   present: "Aujourd'hui", other: "Autres")
+   present: "Aujourd'hui")
 } else {
   (skills: "Skills", education: "Education", experience: "Experience", projects: "Projects",
-   present: "Present", other: "Other")
+   present: "Present")
 }
 #let category-titles = if fr {
   (languages: "Langages", data: "Données")
@@ -72,16 +77,17 @@
   link-line(d.music)
 })
 
-#let group-key(s) = if s.category in category-titles { s.category } else { "other" }
+#let given-titles = d.at("category_titles", default: (:))
+#let heading-of(key) = given-titles.at(key, default: category-titles.at(key, default: key))
 #let visible-skills = d.skills.filter(s => s.category != "soft")
 #let skill-groups = {
   let order = ()
   for s in visible-skills {
-    if group-key(s) not in order { order.push(group-key(s)) }
+    if s.category not in order { order.push(s.category) }
   }
   order.map(key => (
-    title: if key == "other" { titles.other } else { category-titles.at(key) },
-    labels: visible-skills.filter(s => group-key(s) == key).map(s => s.label),
+    title: heading-of(key),
+    labels: visible-skills.filter(s => s.category == key).map(s => s.label),
   ))
 }
 

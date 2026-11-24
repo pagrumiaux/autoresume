@@ -211,7 +211,10 @@ def test_identity_card_omits_a_link_that_is_not_given():
     ],
 )
 def test_section_titles_follow_the_language(lang, present, absent):
-    text = _text(_compile(_example_data(lang))).lower()
+    data = _example_data(lang)
+    data["category_titles"] = {"soft-skills": "Savoir-etre" if lang == "fr" else "Interpersonal"}
+    text = _text(_compile(data)).lower()
+    assert ("savoir-etre" if lang == "fr" else "interpersonal") in text
     for title in present:
         assert title.lower() in text
     for title in absent:
@@ -224,3 +227,15 @@ def test_template_prints_data_it_is_given_not_hard_coded_text():
     text = _text(_compile(data))
     assert "Zed Quuxington" in text
     assert "Jane Doe" not in text
+
+
+def test_category_heading_comes_from_category_titles_else_raw_id():
+    data = _example_data()
+    data["skills"] = [
+        {"label": "Kubeflow", "category": "mlops"},
+        {"label": "Zebra", "category": "rawcat"},
+    ]
+    data["category_titles"] = {"mlops": "ML Operations"}
+    text = _text(_compile(data))
+    assert "ML Operations" in text
+    assert "rawcat" in text
