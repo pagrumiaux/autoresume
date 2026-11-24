@@ -137,13 +137,17 @@ Each later phase is added here with `/jam` before it starts.
 - notes: Read the P0.S10 issue first: `gh issue list --state closed --search "P0.S10 in:title"`. The step that builds template data from a bank comes in P0.S12.
 
 ### P0.S12 — Render function and page count
-- goal: A function that turns a bank and an archetype into a PDF through the template, and a function that returns a PDF's page count, which later agents use to check the one-page limit.
+- goal: A function that turns a bank and an archetype into a PDF through the template, with a proper FR/EN heading for every skill category, and a function that returns a PDF's page count, which later agents use to check the one-page limit.
 - depends_on: [P0.S11]
-- touches: [src/autoresume/render/__init__.py, src/autoresume/render/render.py, tests/render/test_render.py]
+- touches: [src/autoresume/render/__init__.py, src/autoresume/render/render.py, src/autoresume/render/headings.py, tests/render/test_render.py]
+- read_first: [docs/decisions/2026-11-24-category-headings-table.md#decision, docs/decisions/2026-11-24-soft-skills-not-rendered.md#decision]
 - acceptance:
   - `render(bank, archetype, lang, out)` writes a PDF for the fake bank and each fake archetype, in FR and EN
   - the PDF built from the fake bank contains each of its education entries
   - `page_count(pdf)` returns 1 for those outputs, and 2 for a resume the test builds to overflow the page
+  - the template data has a `category_titles` entry for every skill category it contains, taken in the requested language from a table in `src/autoresume/render/headings.py` with these headings (EN / FR): audio "Audio" / "Audio", ml "Machine learning" / "Machine learning", mlops "MLOps & engineering" / "MLOps et ingénierie", programming "Programming" / "Programmation", music "Music" / "Musique", languages "Languages" / "Langues", data "Data" / "Données"
+  - a category missing from the table gets a tidied heading (hyphens to spaces, first letter capitalized: `soft-skills` gives "Soft skills"), a warning naming the category is logged (checked with `caplog`), and the render does not fail
+  - with a bank the test builds that has a `soft` skill, that skill is left out of the template data
 
 ### P0.S13 — `render` command
 - goal: `autoresume render` exposes the render function on the command line, reading the bank from `AUTORESUME_DATA_DIR` by default.
