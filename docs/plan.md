@@ -198,3 +198,170 @@ Each later phase is added here with `/jam` before it starts.
 - depends_on: [P0.Z, P0.D, P0.S15]
 - acceptance:
   - `docs/retros/phase-0.md` exists with what you learned and what changed in the plan
+
+## Phase 1 — Single structured call
+
+### P1.S1 — [Human] OpenRouter key and data-retention check
+- goal: You create an OpenRouter API key and check that its data policy, and that of the providers you will route to, is acceptable for your bank, so personal data only goes where you agreed.
+- depends_on: []
+- acceptance:
+  - the variable OPENROUTER_API_KEY is set in your shell (never paste its value into the plan, an issue or a PR)
+  - the issue closing this task says which OpenRouter privacy settings you chose (for example, no providers that train on prompts) and which models you will try
+
+### P1.S2 — OpenRouter client and call log
+- goal: A thin client over the `openai` SDK pointed at OpenRouter, which sends a chat request, returns the text with its usage, and logs every call as one JSONL line, so later tasks call one interface and every call is costed.
+- depends_on: []
+- touches: [src/autoresume/llm/, tests/llm/, pyproject.toml, uv.lock]
+- read_first: [docs/decisions/2026-11-25-openrouter-first-provider.md#decision]
+- acceptance:
+  - `LLMClient.complete(messages, model=, step=, json_schema=None)` returns a result with the text, input and output tokens, cost in USD (or None when the response has none) and latency in seconds
+  - with `json_schema` given, a test with a fake transport asserts the request body has a `response_format` carrying that schema
+  - each call appends one JSON line to the log file with provider, model, input and output tokens, cost, latency and step name, and no prompt or response text
+  - the log file defaults to `$AUTORESUME_DATA_DIR/logs/llm.jsonl`; with AUTORESUME_DATA_DIR unset and no log path given, an error names the variable
+  - a missing OPENROUTER_API_KEY raises an error that names the variable
+  - tests use a fake HTTP transport or a fake client; `uv run pytest` makes no network call
+- notes: Use the `openai` SDK with OpenRouter's base URL; no other LLM library. Also provide a `FakeLLMClient` that returns queued responses and records the requests, for the agent and CLI tests.
+
+### P1.S3 — Tailoring decision options
+- goal: A short proposal with two or three shapes for the JSON the model returns (the tailoring decision), so you can pick one before any tests are written.
+- depends_on: []
+- touches: [docs/proposals/tailoring-decision.md]
+- read_first: [src/autoresume/bank/schema.py, docs/decisions/2026-10-06-selection-over-generation.md, docs/design.md#design principles]
+- acceptance:
+  - `docs/proposals/tailoring-decision.md` describes each option with a YAML or JSON example built from the fake bank in `examples/bank`
+  - one option expresses the decision as a variant `Archetype` (`extends` plus `ListDelta`), so `render` can use it unchanged
+  - each option says how a validator rejects a bullet, project or skill id that is not in the bank, and how it caps the number of bullets changed versus the archetype (the drift budget)
+  - the proposal ends with a recommendation and its trade-offs
+- test_first: false
+
+### P1.S4 — [Human] Choose the tailoring decision shape
+- goal: You pick the shape of the tailoring decision, so the tests, your code and the `tailor` command share one format.
+- depends_on: [P1.S3]
+- acceptance:
+  - a decision record `docs/decisions/<date>-tailoring-decision.md` names the chosen shape, the drift cap and the rejected options
+
+### P1.S5 — Tests, stub and brief for the tailoring decision model
+- goal: Failing tests, a `TODO(PA)` stub and a learning brief for the Pydantic model of the tailoring decision, so you can write it against a clear spec with guidance.
+- depends_on: [P1.S4]
+- touches: [src/autoresume/agents/__init__.py, src/autoresume/agents/decision.py, tests/agents/__init__.py, tests/agents/test_decision.py, docs/learning/P1.S6.md]
+- read_first: [docs/decisions/2026-11-25-core-by-user-plumbing-by-agents.md#decision]
+- acceptance:
+  - a stub of the decision model in `src/autoresume/agents/decision.py`, in the shape chosen in P1.S4, with a docstring of the expected behaviour and `TODO(PA)`, and no validation logic
+  - tests cover: an unknown bullet, project or skill id is rejected; more bullet changes than the drift cap are rejected; a valid decision built from the fake bank is accepted
+  - each test has a one-line docstring; every test is marked `xfail(strict=True)` and `uv run pytest` passes
+  - `docs/learning/P1.S6.md` explains Pydantic validators with outside context (the bank), links the Pydantic docs and lists common traps, with no solution code
+- test_first: false
+
+### P1.S6 — [Human] Write the tailoring decision model
+- goal: You write the Pydantic model of the tailoring decision, which rejects any id missing from the bank and any change beyond the drift cap, so no claim can leave the bank.
+- depends_on: [P1.S5]
+- acceptance:
+  - every test in `tests/agents/test_decision.py` passes with its xfail marker removed
+  - PR titled `P1.S6: …`, reviewed by pr-reviewer, merged
+- notes: Coached: read `docs/learning/P1.S6.md`; Bob coaches by levels (hint, explanation, example) and writes none of the code.
+
+### P1.S7 — Tests, stubs and brief for the tailoring call
+- goal: Failing tests, `TODO(PA)` stubs, fake job descriptions and a learning brief for `tailor`, the call that turns a job description into a checked decision, so you can write it with guidance.
+- depends_on: [P1.S2, P1.S5]
+- touches: [src/autoresume/agents/tailor.py, tests/agents/test_tailor.py, tests/fixtures/jds/, docs/learning/P1.S8.md]
+- read_first: [docs/decisions/2026-11-25-core-by-user-plumbing-by-agents.md#decision]
+- acceptance:
+  - a stub `tailor(jd, bank, archetype, client, model)` in `src/autoresume/agents/tailor.py` with a docstring of the expected behaviour and `TODO(PA)`, and no implementation
+  - tests, using `FakeLLMClient`, cover: a valid response returns a decision; an invalid response is retried with the validation error sent back to the model; after 2 failed retries it raises an error carrying the last validation errors; the request passes the decision's JSON schema
+  - `tests/fixtures/jds/` holds 3 fake job descriptions, each with one valid response written by hand from the fake bank (no real job description, no real model output)
+  - each test has a one-line docstring; every test is marked `xfail(strict=True)` and `uv run pytest` passes
+  - `docs/learning/P1.S8.md` explains structured outputs, retrying with error feedback and prompt layout, links the API docs and lists common traps, with no solution code
+- test_first: false
+
+### P1.S8 — [Human] Write the prompt and the validate-and-retry call
+- goal: You write the tailoring prompt and the loop that calls the model, validates its JSON against the decision model and retries with the errors, so one call turns a job description into a checked decision.
+- depends_on: [P1.S6, P1.S7]
+- acceptance:
+  - every test in `tests/agents/test_tailor.py` passes with its xfail marker removed
+  - PR titled `P1.S8: …`, reviewed by pr-reviewer, merged
+- notes: Coached: read `docs/learning/P1.S8.md`; Bob coaches by levels (hint, explanation, example) and writes none of the code.
+
+### P1.S9 — Render a tailoring decision
+- goal: A function that applies a tailoring decision to its archetype and renders the result, reporting the page count, so the `tailor` command only has to wire steps together.
+- depends_on: [P1.S6]
+- touches: [src/autoresume/render/tailored.py, tests/render/test_tailored.py]
+- read_first: [src/autoresume/render/render.py]
+- acceptance:
+  - `render_decision(bank, archetype, decision, lang, out)` writes a PDF for each hand-written response in `tests/fixtures/jds/` and returns its page count
+  - the bullets in the PDF follow the decision's order, not the archetype's
+  - a decision that overflows the page returns 2 and still writes the PDF
+- notes: Lives in `render/`, not `agents/`.
+
+### P1.S10 — `tailor` command
+- goal: `autoresume tailor` reads a job description, calls `tailor`, renders the resume and saves everything in a new application folder, so one command goes from job description to resume.
+- depends_on: [P1.S7, P1.S9]
+- touches: [src/autoresume/cli.py, tests/test_cli_tailor.py]
+- read_first: [src/autoresume/cli.py, docs/design.md#tech stack and repo]
+- acceptance:
+  - `uv run autoresume tailor --jd <file> --archetype <id> --lang en --name <slug>` creates `$AUTORESUME_DATA_DIR/applications/<yyyy-mm-dd>_<slug>/` with `job_description.md`, `decision.json` and `resume.pdf`
+  - `--model` picks the model, with a default set in one place in the code
+  - the command prints the model, tokens and cost of the call
+  - a resume over one page exits non-zero with a message giving the page count; the folder is still written
+  - an existing folder is never overwritten: the command exits non-zero
+  - tests replace `tailor` and the client with fakes, so they pass while P1.S8's tests are still xfail
+
+### P1.S11 — [Human] First real runs and model comparison
+- goal: You tailor your resume to two real job descriptions with two or three models, and note cost and quality, to pick Phase 1's default model.
+- depends_on: [P1.S1, P1.S8, P1.S10, P0.S15]
+- acceptance:
+  - two application folders in `autoresume-data/applications/`, each with a one-page `resume.pdf`
+  - `autoresume-data/notes/phase-1-models.md` compares the models tried (cost per run from the log, quality in your words) and names the default
+  - the default model in the code matches it (a `Q-` PR if it changed)
+
+### P1.S12 — Tests, stubs and brief for the add-experience interview
+- goal: Failing tests, `TODO(PA)` stubs and a learning brief for the interview step behind `add-experience`, which asks questions until it can propose a valid bank entry.
+- depends_on: [P1.S2, P1.S5]
+- touches: [src/autoresume/agents/interview.py, tests/agents/test_interview.py, docs/learning/P1.S13.md]
+- read_first: [src/autoresume/bank/schema.py, docs/decisions/2026-11-25-core-by-user-plumbing-by-agents.md#decision]
+- acceptance:
+  - a stub `next_turn(history, bank, client, model)` returns either a question to ask or a draft entry (a bullet, an experience or a project) validated against the bank schema, with a docstring of the expected behaviour and `TODO(PA)`
+  - tests, using `FakeLLMClient`, cover: a question is returned while information is missing; a valid draft is returned once it is complete; an invalid draft is retried with the validation error; a draft reusing an existing id is rejected; a draft missing its FR or EN text is rejected
+  - each test has a one-line docstring; every test is marked `xfail(strict=True)` and `uv run pytest` passes
+  - `docs/learning/P1.S13.md` explains conversation state, when to stop asking, and validating structured output, links the API docs and lists common traps, with no solution code
+- test_first: false
+- notes: Depends on P1.S5 only because P1.S5 creates the `agents/` package.
+
+### P1.S13 — [Human] Write the interview step
+- goal: You write `next_turn`, so the model interviews you about an experience and proposes a bank entry only when it is complete and valid.
+- depends_on: [P1.S12]
+- acceptance:
+  - every test in `tests/agents/test_interview.py` passes with its xfail marker removed
+  - PR titled `P1.S13: …`, reviewed by pr-reviewer, merged
+- notes: Coached: read `docs/learning/P1.S13.md`; Bob coaches by levels (hint, explanation, example) and writes none of the code.
+
+### P1.S14 — `add-experience` command
+- goal: `autoresume add-experience` runs the interview in the terminal, shows the draft entry, and on your OK saves it to the bank, so the bank grows without hand-editing YAML.
+- depends_on: [P1.S10, P1.S12]
+- touches: [src/autoresume/cli.py, src/autoresume/bank/writer.py, tests/test_cli_add_experience.py, tests/bank/test_writer.py]
+- read_first: [src/autoresume/bank/loader.py, docs/decisions/2026-11-23-bank-schema.md#decision]
+- acceptance:
+  - the command loops: prints the question, reads your answer, until `next_turn` returns a draft; then shows it in FR and EN and asks to save, edit or cancel
+  - on save, the entry is written to the bank file the layout puts it in, other entries and comments are kept, and `load_bank` on the result succeeds
+  - if the bank no longer loads after the write, the file is restored and the command exits non-zero with the error
+  - cancel writes nothing
+  - tests replace `next_turn` with a fake, so they pass while P1.S13's tests are still xfail
+- notes: Keeping YAML comments may need `ruamel.yaml`; add it with `uv add` if so. `bank/writer.py` is agent-owned, like `loader.py`.
+
+### P1.Z — Cleanup
+- goal: Remove duplication and simplify the phase's agent-written code, with no change in behaviour.
+- depends_on: [P1.S2, P1.S3, P1.S5, P1.S7, P1.S9, P1.S10, P1.S12, P1.S14]
+- touches: [src/autoresume/llm/, src/autoresume/cli.py, src/autoresume/render/, src/autoresume/bank/writer.py, tests/]
+- acceptance:
+  - no duplicated helpers across the phase; all existing tests pass unchanged
+  - `gh pr diff <n> --name-only` lists no file under `src/autoresume/agents/` and not `src/autoresume/bank/schema.py`
+- test_first: false
+- notes: Deliberately does not wait for the [Human] code tasks; it leaves your code alone.
+
+### P1.D — Docs
+- goal: README sections for `tailor` and `add-experience` with the OpenRouter setup, and a Phase 1 entry in the CHANGELOG.
+- depends_on: [P1.S2, P1.S3, P1.S5, P1.S7, P1.S9, P1.S10, P1.S12, P1.S14]
+- touches: [README.md, CHANGELOG.md]
+- acceptance:
+  - README covers setting OPENROUTER_API_KEY, `autoresume tailor` and `autoresume add-experience`, and where the call log is written
+  - CHANGELOG has a Phase 1 entry
+- agent: docs-writer
