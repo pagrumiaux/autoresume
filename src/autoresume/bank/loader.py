@@ -22,7 +22,7 @@ def load_bank(path: Path) -> tuple[Bank, dict[str, Archetype]]:
     """Load `bank.yaml` and `archetypes/*.yaml` from `path`.
 
     Returns the bank and the archetypes keyed by id, with `extends` inheritance resolved: every
-    field is set and `bullets` and `signals` are plain lists (see `_resolve`). A missing
+    field is set and `bullets` and `signals` are plain lists (see `_resolve_inheritance`). A missing
     `archetypes/` directory gives an empty dict. Raises BankLoadError (naming the file) on any
     problem, including an `extends` cycle.
     """
@@ -50,7 +50,10 @@ def load_bank(path: Path) -> tuple[Bank, dict[str, Archetype]]:
                 f"{archetype_dir / (file_id + '.yaml')}: extends unknown archetype "
                 f"{archetype.extends!r}"
             )
-    return bank, _resolve_inheritance(archetypes, archetype_dir)
+    resolved = _resolve_inheritance(archetypes, archetype_dir)
+    for id_, archetype in resolved.items():
+        _check_resolved(archetype, archetype_dir / f"{id_}.yaml")
+    return bank, resolved
 
 
 def _resolve_inheritance(
@@ -79,6 +82,14 @@ def _resolve_inheritance(
     return {id_: resolve(id_, ()) for id_ in archetypes}
 
 
+def _check_resolved(archetype: Archetype, file: Path) -> None:
+    """Guarantee of `load_bank`: every field is set and `bullets`/`signals` are plain lists."""
+    for name in ("description", "headline", "skills_order", "bullets", "projects", "signals"):
+        value = getattr(archetype, name)
+        if value is None or isinstance(value, ListDelta):
+            raise BankLoadError(f"{file}: {name} is not resolved after inheritance")
+
+
 def _merge(variant: Archetype, parent: Archetype) -> Archetype:
     """Fill `variant` from its already-resolved `parent`; `extends` is kept.
 
@@ -88,7 +99,8 @@ def _merge(variant: Archetype, parent: Archetype) -> Archetype:
     merged: dict[str, Any] = {}
     for name in ("description", "headline", "skills_order", "projects"):
         own = getattr(variant, name)
-        merged[name] = getattr(parent, name) if own is None else own
+        value = getattr(parent, name) if own is None else own
+        merged[name] = list(value) if isinstance(value, list) else value
     for name in ("bullets", "signals"):
         own = getattr(variant, name)
         inherited: list[str] = getattr(parent, name)
@@ -98,7 +110,7 @@ def _merge(variant: Archetype, parent: Archetype) -> Archetype:
             kept = [i for i in inherited if i not in own.remove]
             merged[name] = kept + [i for i in dict.fromkeys(own.add) if i not in kept]
         else:
-            merged[name] = own
+            merged[name] = list(own)
     return variant.model_copy(update=merged)
 
 
@@ -138,11 +150,18 @@ def _reject_duplicate_ids(bank: Bank, file: Path) -> None:
 
 
 def _check_archetype(archetype: Archetype, file: Path, bank: Bank) -> None:
-    """Check file name = id, a non-empty `extends`, and references that exist in the bank."""
+    """Check file name = id, a non-empty `extends`, no delta on a root, and known references."""
     if file.stem != archetype.id:
         raise BankLoadError(f"{file}: archetype id {archetype.id!r} must match the file name")
     if archetype.extends is not None and not archetype.extends.strip():
         raise BankLoadError(f"{file}: extends must not be empty (omit it for a root archetype)")
+    if archetype.extends is None:
+        for name in ("bullets", "signals"):
+            if isinstance(getattr(archetype, name), ListDelta):
+                raise BankLoadError(
+                    f"{file}: root archetype cannot use a delta for {name} "
+                    "(no parent to edit); use a plain list"
+                )
     try:
         bank.check_archetype(archetype)
     except ValueError as exc:

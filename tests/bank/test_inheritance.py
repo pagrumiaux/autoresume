@@ -137,8 +137,10 @@ def test_delta_removing_an_id_the_parent_lacks_is_ignored(tmp_path):
 
 
 def test_empty_delta_inherits_the_parents_list(tmp_path):
-    make_bank(tmp_path, root=ROOT, child=variant("child", "root", "bullets: {}\n"))
-    assert load_bank(tmp_path)[1]["child"].bullets == ["b1", "b2", "b3"]
+    make_bank(tmp_path, root=ROOT, child=variant("child", "root", "bullets: {}\nsignals: {}\n"))
+    child = load_bank(tmp_path)[1]["child"]
+    assert child.bullets == ["b1", "b2", "b3"]
+    assert child.signals == ["s1", "s2", "s3"]
 
 
 def test_chain_resolves_parent_first_whatever_the_file_order(tmp_path):
@@ -156,6 +158,18 @@ def test_chain_resolves_parent_first_whatever_the_file_order(tmp_path):
     assert leaf.projects == []
     assert leaf.signals == ["s1", "s2", "s3"]
     assert leaf.headline == archetypes["root"].headline
+
+
+def test_chain_with_a_plain_list_in_the_middle_then_a_delta(tmp_path):
+    make_bank(
+        tmp_path,
+        root=ROOT,
+        mid=variant("mid", "root", "bullets: [b4, b1]\n"),
+        leaf=variant("leaf", "mid", "bullets: {remove: [b4], add: [b2]}\n"),
+    )
+    archetypes = load_bank(tmp_path)[1]
+    assert archetypes["mid"].bullets == ["b4", "b1"]
+    assert archetypes["leaf"].bullets == ["b1", "b2"]
 
 
 @pytest.mark.parametrize("name", ["root", "mid", "leaf"])
@@ -205,6 +219,63 @@ def test_cycle_raises_naming_a_file_of_the_cycle(tmp_path):
     with pytest.raises(BankLoadError, match=r"[ab]\.yaml") as exc:
         load_bank(tmp_path)
     assert "cycle" in str(exc.value).lower()
+
+
+def test_three_cycle_raises_naming_a_file_of_the_cycle(tmp_path):
+    make_bank(
+        tmp_path,
+        root=ROOT,
+        a=variant("a", "b", "description: A\n"),
+        b=variant("b", "c", "description: B\n"),
+        c=variant("c", "a", "description: C\n"),
+    )
+    with pytest.raises(BankLoadError, match=r"[abc]\.yaml") as exc:
+        load_bank(tmp_path)
+    assert "cycle" in str(exc.value).lower()
+
+
+@pytest.mark.parametrize("field", ["bullets", "signals"])
+def test_root_archetype_with_a_delta_is_rejected_naming_file(tmp_path, field):
+    root = "\n".join(
+        f"{field}: {{add: [b1]}}" if line.startswith(f"{field}:") else line
+        for line in ROOT.splitlines()
+    )
+    make_bank(tmp_path, root=root + "\n")
+    with pytest.raises(BankLoadError, match=r"root\.yaml") as exc:
+        load_bank(tmp_path)
+    assert field in str(exc.value)
+    assert "root archetype cannot use a delta" in str(exc.value)
+
+
+def test_root_with_a_delta_is_rejected_even_when_a_child_extends_it(tmp_path):
+    root = ROOT.replace("bullets: [b1, b2, b3]", "bullets: {add: [b1]}")
+    make_bank(tmp_path, root=root, child=variant("child", "root"))
+    with pytest.raises(BankLoadError, match=r"root\.yaml"):
+        load_bank(tmp_path)
+
+
+def test_lists_are_owned_by_each_archetype(tmp_path):
+    make_bank(
+        tmp_path,
+        root=ROOT,
+        one=variant("one", "root"),
+        two=variant("two", "root", "bullets: [b4]\n"),
+        three=variant("three", "root", "bullets: {add: [b4]}\n"),
+    )
+    archetypes = load_bank(tmp_path)[1]
+    archetypes["one"].skills_order.append("mutated")
+    archetypes["one"].projects.append("mutated")
+    archetypes["one"].bullets.append("mutated")
+    archetypes["one"].signals.append("mutated")
+    archetypes["two"].bullets.append("mutated")
+    archetypes["three"].bullets.append("mutated")
+    for other in ("root", "two", "three"):
+        assert "mutated" not in archetypes[other].skills_order
+        assert "mutated" not in archetypes[other].projects
+        assert "mutated" not in archetypes[other].signals
+    assert archetypes["root"].bullets == ["b1", "b2", "b3"]
+    assert archetypes["two"].bullets == ["b4", "mutated"]
+    assert archetypes["three"].bullets == ["b1", "b2", "b3", "b4", "mutated"]
 
 
 def test_archetype_extending_itself_is_a_cycle(tmp_path):
